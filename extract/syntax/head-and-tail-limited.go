@@ -1,9 +1,9 @@
 package syntax
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
-	"fmt"
 )
 
 type headAndTailLimited struct {
@@ -34,21 +34,21 @@ func (hatl *headAndTailLimited) MultipleMatchmakers(format [][]string) {
  tailRegexp a|aj
  */
 func (hatl *headAndTailLimited) Matchmaker(headRegexp string, tailRegexp string, step string) {
-	regexpFormat := `(?P<head>/%s)\s(?:/\w+\s){0,%s}?(?P<tail>/%s)`
+	regexpFormat := `(?P<head>/(?:%s)\s)(?:/\w+\s){0,%s}?(?P<tail>/(?:%s)\s)`
 
 	hatl.reg = append(hatl.reg, regexp.MustCompile(fmt.Sprintf(regexpFormat, headRegexp, step, tailRegexp)))
 }
 
-func (hatl *headAndTailLimited) BlindDate(beau [] string, format [][]string) []couple {
-	hatl.MultipleMatchmakers(format)
-
-	return hatl.Seek(beau)
-}
-
-func (hatl *headAndTailLimited) Pursue(beau []string, headRegexp string, tailRegexp string, step string) []couple {
-	hatl.Matchmaker(headRegexp, tailRegexp, step)
-	return hatl.Seek(beau)
-}
+//func (hatl *headAndTailLimited) BlindDate(beau [] string, format [][]string) []couple {
+//	hatl.MultipleMatchmakers(format)
+//
+//	return hatl.Seek(beau)
+//}
+//
+//func (hatl *headAndTailLimited) Pursue(beau []string, headRegexp string, tailRegexp string, step string) []couple {
+//	hatl.Matchmaker(headRegexp, tailRegexp, step)
+//	return hatl.Seek(beau)
+//}
 
 func (hatl *headAndTailLimited) Seek(beau []string) []couple {
 	beauLen := len(beau)
@@ -63,7 +63,7 @@ func (hatl *headAndTailLimited) Seek(beau []string) []couple {
 		vocs = append(vocs, "/"+wv[1])
 	}
 
-	vocsString := strings.Join(vocs, " ")
+	vocsString := strings.Join(vocs, " ") + " "
 	var couples []couple
 	for _, reg := range hatl.reg {
 		subMatchIndexes := reg.FindAllStringSubmatchIndex(vocsString, -1)
@@ -115,5 +115,5 @@ func (hatl *headAndTailLimited) propose(words []string, vocsString string, index
 }
 
 func (hatl *headAndTailLimited) pickUpSlice(items []string, startIndex int, endIndex int) string {
-	return strings.Join(items[startIndex:endIndex], " ")
+	return strings.Join(items[startIndex:endIndex], "")
 }
