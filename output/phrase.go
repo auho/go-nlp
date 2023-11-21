@@ -51,7 +51,9 @@ type ExtractPos struct {
 
 func NewExtractPos(str string) *ExtractPos {
 	return &ExtractPos{
-		re: regexp.MustCompile(" " + str + " "), // 前后增加空格，方便后续匹配（简化 regexp expression ）
+		// 前面增加空格，方便后续匹配（简化 regexp expression ）
+		//  A B CD EFG
+		re: regexp.MustCompile(" " + str + `\b`),
 	}
 }
 
@@ -60,28 +62,36 @@ func (e *ExtractPos) Extract(p Phrase) []ExtractResult {
 
 	_ps := p.ToPhrases()
 	for _, _p := range _ps {
-		_psLen := len(_p.posSyntax)
-		res := e.re.FindAllStringIndex(" "+_p.posSyntax+" ", -1) // 前后增加空格
-		for _, _res := range res {
-			var _er ExtractResult
+		er = append(er, e.extractPhrase(_p)...)
+	}
 
-			_start := _res[0]    // 包含（regexp expression 包含前缀空格，匹配时 pos syntax 被增加空格，不用修正位置）
-			_stop := _res[1] - 2 // 不包含（regexp expression 包含后缀空格，匹配时 pos syntax 被增加空格，去除被匹配的后缀的空格，修正位置）
+	return er
+}
 
-			if _stop >= _psLen {
-				_stop = _psLen
-			}
+func (e *ExtractPos) extractPhrase(p Phrase) []ExtractResult {
+	var er []ExtractResult
 
-			_indexStart := strings.Count(_p.posSyntax[0:_start], " ")
-			_indexEnd := _indexStart + strings.Count(_p.posSyntax[_start:_stop], " ") + 1
+	_psLen := len(p.posSyntax)
+	res := e.re.FindAllStringIndex(" "+p.posSyntax+" ", -1) // 前后增加空格
+	for _, _res := range res {
+		var _er ExtractResult
 
-			_er.Tok = _p.tok[_indexStart:_indexEnd]
-			_er.Phrase = strings.Join(_er.Tok, "")
-			_er.Pos = _p.pos[_indexStart:_indexEnd]
-			_er.PosSyntax = _er.Pos.ToSyntax()
+		_start := _res[0]    // 包含（regexp expression 包含前缀空格，匹配时 pos syntax 被增加空格，不用修正位置）
+		_stop := _res[1] - 2 // 不包含（regexp expression 包含后缀空格，匹配时 pos syntax 被增加空格，去除被匹配的后缀的空格，修正位置）
 
-			er = append(er, _er)
+		if _stop >= _psLen {
+			_stop = _psLen
 		}
+
+		_indexStart := strings.Count(p.posSyntax[0:_start], " ")
+		_indexEnd := _indexStart + strings.Count(p.posSyntax[_start:_stop], " ") + 1
+
+		_er.Tok = p.tok[_indexStart:_indexEnd]
+		_er.Phrase = strings.Join(_er.Tok, "")
+		_er.Pos = p.pos[_indexStart:_indexEnd]
+		_er.PosSyntax = _er.Pos.ToSyntax()
+
+		er = append(er, _er)
 	}
 
 	return er

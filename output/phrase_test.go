@@ -45,15 +45,11 @@ func TestPhrase(t *testing.T) {
 
 	_ps := _s.ToPhrase()
 
-	_extractAd := NewExtractPos(`AD`)
-	for _, _p := range _ps {
-		_r := _extractAd.Extract(_p)
-		fmt.Println(_r)
-	}
-
-	_extractAd2 := NewExtractPos(`AD AD`)
-	for _, _p := range _ps {
-		_r := _extractAd2.Extract(_p)
-		fmt.Println(_r)
+	for _, s := range []string{`AD`, `AD AD`, `VA`, `AD( AD)* VA`} {
+		_extractAd := NewExtractPos(s)
+		for _, _p := range _ps {
+			_r := _extractAd.Extract(_p)
+			fmt.Println(_r)
+		}
 	}
 }
